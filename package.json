@@ -1,0 +1,72 @@
+{
+  "name": "synct",
+  "version": "0.1.0",
+  "description": "Type-safe state management with undo/redo, async tracking, and React integration",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "build:prod": "NODE_ENV=production tsc",
+    "dev": "tsc --watch",
+    "test": "ts-node test/quick-test.ts",
+    "prepublishOnly": "npm run build",
+    "example:basic": "ts-node examples/basic.ts",
+    "example:problems": "ts-node examples/solving-problems.ts",
+    "example:react": "echo 'React example requires React setup. See examples/react-example.tsx'",
+    "test:quick": "ts-node test/quick-test.ts",
+    "demo": "ts-node test/interactive-demo.ts",
+    "start": "npm run test:quick",
+    "benchmark": "ts-node --project tsconfig.benchmark.json benchmark/performance.ts",
+    "benchmark:speed": "ts-node --compiler-options '{\"module\":\"commonjs\"}' -e \"require('./benchmark/performance').then(m => Promise.all([m.compareSetStateSpeed(), m.compareSubscribeSpeed()]))\"",
+    "benchmark:setState": "ts-node --compiler-options '{\"module\":\"commonjs\"}' -e \"require('./benchmark/performance').then(m => m.testSetStatePerformance())\"",
+    "benchmark:subscribe": "ts-node --compiler-options '{\"module\":\"commonjs\"}' -e \"require('./benchmark/performance').then(m => m.testSubscribePerformance())\"",
+    "benchmark:undo": "ts-node --compiler-options '{\"module\":\"commonjs\"}' -e \"require('./benchmark/performance').then(m => m.testUndoRedoPerformance())\"",
+    "benchmark:memory": "ts-node --compiler-options '{\"module\":\"commonjs\"}' -e \"require('./benchmark/performance').then(m => m.testMemoryUsage())\""
+  },
+  "keywords": [
+    "state-management",
+    "typescript",
+    "undo-redo",
+    "event-emitter",
+    "react",
+    "vue",
+    "state",
+    "immutable",
+    "history",
+    "middleware",
+    "async",
+    "debugging",
+    "devtools"
+  ],
+  "author": "Hyun Sung Cho <hcho774@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hcho774/synct.git"
+  },
+  "homepage": "https://github.com/hcho774/synct#readme",
+  "bugs": {
+    "url": "https://github.com/hcho774/synct/issues"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.0.0",
+    "jest": "^30.3.0",
+    "mobx": "^6.15.0",
+    "redux": "^5.0.1",
+    "ts-jest": "^29.4.6",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.0.0",
+    "xstate": "^5.25.0",
+    "zustand": "^5.0.9"
+  },
+  "peerDependencies": {
+    "react": ">=16.8.0"
+  }
+}

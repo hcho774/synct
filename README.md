@@ -487,10 +487,7 @@ const store = new TachyoManager(initialState, {
 
 ## Documentation
 
-- [How It Works](./docs/HOW_IT_WORKS.md)
-- [Event-Driven Advantages](./docs/EVENT_DRIVEN_ADVANTAGES.md)
 - [Solving Problems Guide](./docs/SOLVING_PROBLEMS.md)
-- [Competitive Analysis](./COMPETITIVE_ANALYSIS.md)
 
 ## License
 

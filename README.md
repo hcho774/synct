@@ -1,13 +1,12 @@
 # tachyo
 
-🎯 State management with built-in undo/redo and change tracking
+🎯 A fully-featured, zero-dependency state engine matching the speed of minimal libraries while keeping native Undo/Redo & JSON diffing out-of-the-box.
 
 [![npm version](https://badge.fury.io/js/tachyo.svg)](https://www.npmjs.com/package/tachyo)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-> Type-safe state management with automatic undo/redo, event tracking, and React integration
-
-tachyo provides built-in undo/redo, change path tracking, and async flow debugging in a single package.
+> **Enterprise-grade features at vanilla speeds.**
+> `tachyo` provides built-in undo/redo, change path tracking, native Chrome DevTools bridging, and extreme micro-optimizations in a single lightweight package.
 
 ## Installation
 

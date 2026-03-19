@@ -1,15 +1,15 @@
 /**
- * Performance Benchmark Tests for Synct
+ * Performance Benchmark Tests for Tachyo
  * 
  * Run: npx ts-node benchmark/performance.ts
  * 
- * This benchmark compares Synct's performance with other state management libraries
+ * This benchmark compares Tachyo's performance with other state management libraries
  * 
  * To compare with other libraries, install them first:
  * npm install --save-dev zustand redux mobx xstate
  */
 
-import { SynctManager } from '../src/SynctManager';
+import { TachyoManager } from '../src/TachyoManager';
 
 interface BenchmarkResult {
   name: string;
@@ -87,12 +87,12 @@ async function runBenchmark(
   };
 }
 
-// Synct benchmarks
-async function testSynctSetState() {
-  const store = new SynctManager({ count: 0 });
+// Tachyo benchmarks
+async function testTachyoSetState() {
+  const store = new TachyoManager({ count: 0 });
   return await runBenchmark(
     'setState (simple)',
-    'Synct',
+    'Tachyo',
     () => {
       store.setState({ count: store.state.count + 1 });
     },
@@ -100,12 +100,12 @@ async function testSynctSetState() {
   );
 }
 
-async function testSynctSubscribe() {
-  const store = new SynctManager({ count: 0 });
+async function testTachyoSubscribe() {
+  const store = new TachyoManager({ count: 0 });
   store.subscribe(() => {});
   return await runBenchmark(
     'subscribe (1 subscriber)',
-    'Synct',
+    'Tachyo',
     () => {
       store.setState({ count: store.state.count + 1 });
     },
@@ -113,14 +113,14 @@ async function testSynctSubscribe() {
   );
 }
 
-async function testSynctUndo() {
-  const store = new SynctManager({ count: 0 }, { maxHistorySize: 1000 });
+async function testTachyoUndo() {
+  const store = new TachyoManager({ count: 0 }, { maxHistorySize: 1000 });
   for (let i = 0; i < 1000; i++) {
     store.setState({ count: i });
   }
   return await runBenchmark(
     'undo/redo',
-    'Synct',
+    'Tachyo',
     () => {
       if (store.canUndo()) {
         store.undo();
@@ -135,9 +135,9 @@ async function testSynctUndo() {
 async function testZustandSetState(): Promise<BenchmarkResult | null> {
   try {
     const { create } = require('zustand');
-    const useStore = create((set: any) => ({
+    const useStore = create((set: Function) => ({
       count: 0,
-      increment: () => set((state: any) => ({ count: state.count + 1 })),
+      increment: () => set((state: { count: number }) => ({ count: state.count + 1 })),
     }));
     
     return await runBenchmark(
@@ -156,9 +156,9 @@ async function testZustandSetState(): Promise<BenchmarkResult | null> {
 async function testZustandSubscribe(): Promise<BenchmarkResult | null> {
   try {
     const { create } = require('zustand');
-    const useStore = create((set: any) => ({
+    const useStore = create((set: Function) => ({
       count: 0,
-      increment: () => set((state: any) => ({ count: state.count + 1 })),
+      increment: () => set((state: { count: number }) => ({ count: state.count + 1 })),
     }));
     
     useStore.subscribe(() => {});
@@ -180,7 +180,7 @@ async function testZustandSubscribe(): Promise<BenchmarkResult | null> {
 async function testReduxSetState(): Promise<BenchmarkResult | null> {
   try {
     const { createStore } = require('redux');
-    const store = createStore((state = { count: 0 }, action: any) => {
+    const store = createStore((state = { count: 0 }, action: { type: string }) => {
       if (action.type === 'INCREMENT') {
         return { count: state.count + 1 };
       }
@@ -203,7 +203,7 @@ async function testReduxSetState(): Promise<BenchmarkResult | null> {
 async function testReduxSubscribe(): Promise<BenchmarkResult | null> {
   try {
     const { createStore } = require('redux');
-    const store = createStore((state = { count: 0 }, action: any) => {
+    const store = createStore((state = { count: 0 }, action: { type: string }) => {
       if (action.type === 'INCREMENT') {
         return { count: state.count + 1 };
       }
@@ -290,8 +290,8 @@ async function testMobXSubscribe(): Promise<BenchmarkResult | null> {
 async function testXStateSetState(): Promise<BenchmarkResult | null> {
   try {
     // Try XState v5 API first, fallback to v4
-    let createMachine: any;
-    let interpret: any;
+    let createMachine: Function;
+    let interpret: Function;
     try {
       const xstate = require('xstate');
       // XState v5 uses setup() and createActor
@@ -299,7 +299,7 @@ async function testXStateSetState(): Promise<BenchmarkResult | null> {
         const { setup, createActor } = xstate;
         const counterMachine = setup({
           actions: {
-            increment: ({ context }: any) => {
+            increment: ({ context }: { context: { count: number } }) => {
               context.count++;
             }
           }
@@ -346,7 +346,7 @@ async function testXStateSetState(): Promise<BenchmarkResult | null> {
             active: {
               on: {
                 INCREMENT: {
-                  actions: ({ context }: any) => {
+                  actions: ({ context }: { context: { count: number } }) => {
                     context.count++;
                   }
                 }
@@ -383,7 +383,7 @@ async function testXStateSubscribe(): Promise<BenchmarkResult | null> {
       const { setup, createActor } = xstate;
       const counterMachine = setup({
         actions: {
-          increment: ({ context }: any) => {
+          increment: ({ context }: { context: { count: number } }) => {
             context.count++;
           }
         }
@@ -433,7 +433,7 @@ async function testXStateSubscribe(): Promise<BenchmarkResult | null> {
           active: {
             on: {
               INCREMENT: {
-                actions: ({ context }: any) => {
+                actions: ({ context }: { context: { count: number } }) => {
                   context.count++;
                 }
               }
@@ -472,8 +472,8 @@ async function compareSetStateSpeed() {
   const zustandResult = await testZustandSetState();
   if (zustandResult) results.push(zustandResult);
 
-  // Synct
-  results.push(await testSynctSetState());
+  // Tachyo
+  results.push(await testTachyoSetState());
   
   // Redux (if available)
   const reduxResult = await testReduxSetState();
@@ -517,8 +517,8 @@ async function compareSubscribeSpeed() {
   
   const results: BenchmarkResult[] = [];
   
-  // Synct
-  results.push(await testSynctSubscribe());
+  // Tachyo
+  results.push(await testTachyoSubscribe());
   
   // Zustand (if available)
   const zustandResult = await testZustandSubscribe();
@@ -560,7 +560,7 @@ async function compareSubscribeSpeed() {
   return results;
 }
 
-// Detailed Synct benchmarks
+// Detailed Tachyo benchmarks
 async function testSetStatePerformance() {
   console.log('\n📊 Benchmark: setState Performance\n');
   console.log('='.repeat(60));
@@ -568,10 +568,10 @@ async function testSetStatePerformance() {
   const results: BenchmarkResult[] = [];
   
   // Test 1: Simple setState
-  const store1 = new SynctManager({ count: 0 });
+  const store1 = new TachyoManager({ count: 0 });
   results.push(await runBenchmark(
     'setState (simple)',
-    'Synct',
+    'Tachyo',
     () => {
       store1.setState({ count: store1.state.count + 1 });
     },
@@ -579,7 +579,7 @@ async function testSetStatePerformance() {
   ));
   
   // Test 2: setState with deep object
-  const store2 = new SynctManager({
+  const store2 = new TachyoManager({
     user: {
       profile: {
         name: 'John',
@@ -593,7 +593,7 @@ async function testSetStatePerformance() {
   });
   results.push(await runBenchmark(
     'setState (deep object)',
-    'Synct',
+    'Tachyo',
     () => {
       store2.setState({
         user: {
@@ -609,13 +609,13 @@ async function testSetStatePerformance() {
   ));
   
   // Test 3: setState with change tracking enabled
-  const store3 = new SynctManager(
+  const store3 = new TachyoManager(
     { count: 0 },
     { enableChangePathTracking: true }
   );
   results.push(await runBenchmark(
     'setState (with change tracking)',
-    'Synct',
+    'Tachyo',
     () => {
       store3.setState({ count: store3.state.count + 1 });
     },
@@ -644,12 +644,12 @@ async function testSubscribePerformance() {
   const results: BenchmarkResult[] = [];
   
   // Test 1: Single subscriber
-  const store1 = new SynctManager({ count: 0 });
+  const store1 = new TachyoManager({ count: 0 });
   store1.subscribe(() => {});
   
   results.push(await runBenchmark(
     'subscribe (1 subscriber)',
-    'Synct',
+    'Tachyo',
     () => {
       store1.setState({ count: store1.state.count + 1 });
     },
@@ -657,14 +657,14 @@ async function testSubscribePerformance() {
   ));
   
   // Test 2: Multiple subscribers
-  const store2 = new SynctManager({ count: 0 });
+  const store2 = new TachyoManager({ count: 0 });
   for (let i = 0; i < 10; i++) {
     store2.subscribe(() => {});
   }
   
   results.push(await runBenchmark(
     'subscribe (10 subscribers)',
-    'Synct',
+    'Tachyo',
     () => {
       store2.setState({ count: store2.state.count + 1 });
     },
@@ -672,12 +672,12 @@ async function testSubscribePerformance() {
   ));
   
   // Test 3: Property subscription
-  const store3 = new SynctManager({ count: 0, name: 'Test' });
+  const store3 = new TachyoManager({ count: 0, name: 'Test' });
   store3.subscribeToProperty('count', () => {});
   
   results.push(await runBenchmark(
     'subscribeToProperty',
-    'Synct',
+    'Tachyo',
     () => {
       store3.setState({ count: store3.state.count + 1 });
     },
@@ -703,7 +703,7 @@ async function testUndoRedoPerformance() {
   const results: BenchmarkResult[] = [];
   
   // Test 1: Undo performance
-  const store1 = new SynctManager({ count: 0 }, { maxHistorySize: 1000 });
+  const store1 = new TachyoManager({ count: 0 }, { maxHistorySize: 1000 });
   // Build history
   for (let i = 0; i < 1000; i++) {
     store1.setState({ count: i });
@@ -711,7 +711,7 @@ async function testUndoRedoPerformance() {
   
   results.push(await runBenchmark(
     'undo (1000 history entries)',
-    'Synct',
+    'Tachyo',
     () => {
       if (store1.canUndo()) {
         store1.undo();
@@ -722,10 +722,10 @@ async function testUndoRedoPerformance() {
   ));
   
   // Test 2: History creation
-  const store2 = new SynctManager({ count: 0 }, { maxHistorySize: 100 });
+  const store2 = new TachyoManager({ count: 0 }, { maxHistorySize: 100 });
   results.push(await runBenchmark(
     'history creation',
-    'Synct',
+    'Tachyo',
     () => {
       store2.setState({ count: store2.state.count + 1 });
     },
@@ -751,7 +751,7 @@ async function testChangeTrackingPerformance() {
   const results: BenchmarkResult[] = [];
   
   // Test 1: Change tracking enabled
-  const store1 = new SynctManager(
+  const store1 = new TachyoManager(
     {
       user: {
         profile: {
@@ -766,7 +766,7 @@ async function testChangeTrackingPerformance() {
   
   results.push(await runBenchmark(
     'change tracking (enabled)',
-    'Synct',
+    'Tachyo',
     () => {
       store1.setState({
         user: {
@@ -782,7 +782,7 @@ async function testChangeTrackingPerformance() {
   ));
   
   // Test 2: Change tracking disabled
-  const store2 = new SynctManager(
+  const store2 = new TachyoManager(
     {
       user: {
         profile: {
@@ -797,7 +797,7 @@ async function testChangeTrackingPerformance() {
   
   results.push(await runBenchmark(
     'change tracking (disabled)',
-    'Synct',
+    'Tachyo',
     () => {
       store2.setState({
         user: {
@@ -831,11 +831,11 @@ async function testAsyncTrackingPerformance() {
   const results: BenchmarkResult[] = [];
   
   interface AsyncTestState {
-    data: any;
+    data: unknown;
     loading: boolean;
   }
   
-  const store = new SynctManager<AsyncTestState>(
+  const store = new TachyoManager<AsyncTestState>(
     { data: null, loading: false },
     { enableAsyncTracking: true }
   );
@@ -843,7 +843,7 @@ async function testAsyncTrackingPerformance() {
   // Fix: registerAsyncAction only takes 1 type parameter (R, the return type)
   store.registerAsyncAction<{ result: string }>({
     name: 'testAction',
-    handler: async (state) => {
+    handler: async () => {
       await new Promise(resolve => setTimeout(resolve, 0));
       return { result: 'success' };
     },
@@ -857,7 +857,7 @@ async function testAsyncTrackingPerformance() {
   
   results.push(await runBenchmark(
     'async action (with tracking)',
-    'Synct',
+    'Tachyo',
     async () => {
       await store.dispatchAsync('testAction');
     },
@@ -882,10 +882,10 @@ async function testMemoryUsage() {
   
   const memoryBefore = getMemoryUsage();
   
-  // Create stores with history - use any[] to avoid type issues
-  const stores: any[] = [];
+  // Create stores with history - use unknown[] to avoid type issues
+  const stores: unknown[] = [];
   for (let i = 0; i < 100; i++) {
-    const store = new SynctManager({ count: 0 }, { maxHistorySize: 100 });
+    const store = new TachyoManager({ count: 0 }, { maxHistorySize: 100 });
     for (let j = 0; j < 100; j++) {
       store.setState({ count: j });
     }
@@ -916,7 +916,7 @@ function compareFeatures() {
   const features = [
     {
       feature: 'Built-in Undo/Redo',
-      synct: '✅',
+      tachyo: '✅',
       zustand: '❌ (requires Zundo)',
       redux: '❌ (requires Redux Undo)',
       jotai: '❌',
@@ -925,7 +925,7 @@ function compareFeatures() {
     },
     {
       feature: 'Change Path Tracking',
-      synct: '✅',
+      tachyo: '✅',
       zustand: '❌',
       redux: '❌',
       jotai: '❌',
@@ -934,7 +934,7 @@ function compareFeatures() {
     },
     {
       feature: 'Async Flow Debugging',
-      synct: '✅',
+      tachyo: '✅',
       zustand: '❌',
       redux: '❌',
       jotai: '❌',
@@ -943,7 +943,7 @@ function compareFeatures() {
     },
     {
       feature: 'Action Chain Tracking',
-      synct: '✅',
+      tachyo: '✅',
       zustand: '❌',
       redux: '⚠️ (limited)',
       jotai: '❌',
@@ -952,7 +952,7 @@ function compareFeatures() {
     },
     {
       feature: 'Redux DevTools',
-      synct: '✅',
+      tachyo: '✅',
       zustand: '⚠️',
       redux: '✅',
       jotai: '⚠️',
@@ -961,7 +961,7 @@ function compareFeatures() {
     },
     {
       feature: 'Zero Dependencies',
-      synct: '✅',
+      tachyo: '✅',
       zustand: '✅',
       redux: '❌',
       jotai: '⚠️',
@@ -970,7 +970,7 @@ function compareFeatures() {
     },
     {
       feature: 'Bundle Size',
-      synct: '~5-8KB',
+      tachyo: '~5-8KB',
       zustand: '~1KB',
       redux: '~15KB+',
       jotai: '~2KB',
@@ -979,16 +979,16 @@ function compareFeatures() {
     },
   ];
   
-  console.log('\n| Feature | Synct | Zustand | Redux | Jotai | MobX | XState |');
+  console.log('\n| Feature | Tachyo | Zustand | Redux | Jotai | MobX | XState |');
   console.log('|---------|----------|---------|-------|-------|------|--------|');
   features.forEach(f => {
-    console.log(`| ${f.feature} | ${f.synct} | ${f.zustand} | ${f.redux} | ${f.jotai} | ${(f as any).mobx || 'N/A'} | ${(f as any).xstate || 'N/A'} |`);
+    console.log(`| ${f.feature} | ${f.tachyo} | ${f.zustand} | ${f.redux} | ${f.jotai} | ${(f as Record<string, string>).mobx || 'N/A'} | ${(f as Record<string, string>).xstate || 'N/A'} |`);
   });
 }
 
 // Main benchmark runner
 async function runAllBenchmarks() {
-  console.log('🚀 Synct Performance Benchmark\n');
+  console.log('🚀 Tachyo Performance Benchmark\n');
   console.log('='.repeat(60));
   
   try {
@@ -996,7 +996,7 @@ async function runAllBenchmarks() {
     await compareSetStateSpeed();
     await compareSubscribeSpeed();
     
-    // Detailed Synct benchmarks
+    // Detailed Tachyo benchmarks
     await testSetStatePerformance();
     await testSubscribePerformance();
     await testUndoRedoPerformance();

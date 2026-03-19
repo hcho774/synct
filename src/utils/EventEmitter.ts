@@ -3,7 +3,7 @@
  * Replaces 'events' package to reduce bundle size
  */
 
-/** Generic event listener type — replaces bare Function + any[] */
+/** Generic event listener type — replaces bare Function + unknown[] */
 type EventListener = (...args: unknown[]) => void;
 
 export class SimpleEventEmitter {

@@ -44,7 +44,6 @@
     "undo-redo",
     "event-emitter",
     "react",
-    "vue",
     "state",
     "immutable",
     "history",

@@ -1,8 +1,8 @@
-import { SynctManager } from '../src/SynctManager';
+import { TachyoManager } from '../src/TachyoManager';
 import { devTools } from '../src/utils/devtools';
 
 // Mock DevTools
-(globalThis as any).window = {
+(globalThis as Record<string, unknown>).window = {
   __REDUX_DEVTOOLS_EXTENSION__: {
     connect: () => ({
       init: () => {},
@@ -15,7 +15,7 @@ import { devTools } from '../src/utils/devtools';
 
 devTools['connect']();
 
-const store = new SynctManager({ count: 0 });
+const store = new TachyoManager({ count: 0 });
 
 async function bench() {
   const start = performance.now();

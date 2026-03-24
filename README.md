@@ -61,15 +61,6 @@ function Counter() {
 
 Automatic history management — enable `autoSnapshot` and every `setState` call is tracked.
 
-```typescript
-const store = new TachyoManager({ count: 0 }, { autoSnapshot: true });
-
-store.setState({ count: 1 });
-store.setState({ count: 2 });
-store.undo(); // Back to count: 1
-store.redo(); // Forward to count: 2
-```
-
 **Use cases:**
 - Form editors: Users can undo accidental changes
 - Design tools: Essential for creative workflows
@@ -100,7 +91,6 @@ store.subscribe((state, event) => {
 **Benefits:**
 - Faster debugging: Know exactly what changed
 - Better onboarding: New developers understand state flow
-- Improved bug reports: Users can provide exact change paths
 - Easier code reviews: Reviewers see complete action history
 
 ### ⚡ Async Flow Debugging
@@ -133,7 +123,6 @@ const completed = store.getCompletedAsyncActions();
 **Benefits:**
 - API debugging: Know exactly which request failed and why
 - Performance monitoring: Identify slow async operations
-- Error tracking: Full context for error reporting
 - Better UX: Show accurate loading states
 
 ### 🛠️ Action Chain Tracking
@@ -168,11 +157,6 @@ import { TachyoManager } from 'tachyo';
 const store = new TachyoManager({ count: 0 });
 ```
 
-**Benefits:**
-- Multi-framework projects: Use the same state management
-- Legacy code: Works in vanilla JS projects
-- Easy migration: Same API across frameworks
-
 ### 🏎️ Blazing Fast Performance
 
 **tachyo** is carefully designed and V8 micro-optimized directly at the physical JS engine allocation limits.
@@ -180,7 +164,7 @@ const store = new TachyoManager({ count: 0 });
 - **~8.5 Million ops/sec** for simple state modifications (highly conservative).
 - **~19.0 Million ops/sec** for history navigation (Undo/Redo).
 
-It's important to note that while **tachyo** ships with heavy-duty features like Action Tracking and Deep Object comparisons, these features are perfectly isolated and opt-in. This extreme architectural optimization allows tachyo's baseline state modifications to perform **completely on par with the world's most ultra-minimal libraries (like Zustand and Redux)**. You get a fully-featured, enterprise-grade engine without sacrificing a single drop of vanilla performance.
+All heavy features (Action Tracking, Deep Object comparisons) are perfectly isolated and opt-in, so baseline performance is **completely on par with the world's most minimal libraries (like Zustand and Redux)**.
 
 ### 🚀 Zero Dependencies
 
@@ -191,7 +175,7 @@ Lightweight with no external dependencies.
 // - Custom EventEmitter (no 'events' package)
 // - All utilities included
 // - Tree-shaking friendly
-// - ~5-8KB gzipped with ALL features
+// - ~7KB gzipped with ALL features
 ```
 
 ### 🔧 Middleware System
@@ -224,9 +208,13 @@ const analyticsMiddleware = (state, next, action) => {
 const store = new TachyoManager(initialState, {
   middleware: [loggingMiddleware, validationMiddleware, analyticsMiddleware],
 });
+
+// Or add dynamically
+store.use(customMiddleware);
+store.removeMiddleware(customMiddleware);
 ```
 
-## Complete example
+## Complete Example
 
 ```tsx
 import { useTachyo } from 'tachyo/react';
@@ -273,7 +261,7 @@ function TodoApp() {
 }
 ```
 
-## Vanilla usage (outside React)
+## Vanilla Usage
 
 ```typescript
 import { TachyoManager } from 'tachyo';
@@ -289,6 +277,11 @@ const unsubscribe = gameStore.subscribe((state, event) => {
   console.log('What changed:', event.changePath); // ['score'] or ['level']
 });
 
+// Subscribe to specific property
+gameStore.subscribeToProperty('score', (newScore, oldScore) => {
+  console.log(`Score: ${oldScore} -> ${newScore}`);
+});
+
 // Update state
 gameStore.setState({ score: 100 });
 gameStore.setState({ level: 2 });
@@ -299,28 +292,10 @@ gameStore.redo(); // Forward to level 2
 
 // Cleanup
 unsubscribe();
-```
-
-## Subscribe to specific properties
-
-```typescript
-// Subscribe to all changes
-gameStore.subscribe((state, event) => {
-  console.log('Any property changed');
-});
-
-// Subscribe to specific property
-gameStore.subscribeToProperty('score', (newScore, oldScore) => {
-  console.log(`Score changed: ${oldScore} -> ${newScore}`);
-  if (newScore > 1000) {
-    console.log('High score!');
-  }
-});
+gameStore.destroy();
 ```
 
 ## Using with TypeScript
-
-tachyo is written in TypeScript and works best with it. No special TypeScript types needed!
 
 ```typescript
 import { TachyoManager } from 'tachyo';
@@ -337,12 +312,6 @@ const addItem = (item: { id: string; name: string; price: number }) => {
   });
 };
 
-const removeItem = (id: string) => {
-  cartStore.setState({
-    items: cartStore.state.items.filter(item => item.id !== id),
-  });
-};
-
 // Fully typed!
 cartStore.setState({ items: [] }); // ✅
 // cartStore.setState({ items: 'invalid' }); // ❌ Type error
@@ -350,7 +319,7 @@ cartStore.setState({ items: [] }); // ✅
 
 ## Redux DevTools
 
-tachyo automatically integrates with Redux DevTools Extension when available. Just use tachyo normally!
+tachyo automatically integrates with Redux DevTools Extension when available.
 
 ```typescript
 const editorStore = new TachyoManager({ content: '', fontSize: 16 });
@@ -358,66 +327,6 @@ const editorStore = new TachyoManager({ content: '', fontSize: 16 });
 editorStore.setState({ content: 'Hello World' });
 editorStore.setState({ fontSize: 18 });
 // Automatically appears in Redux DevTools! 🎉
-```
-
-## Middleware
-
-You can add middleware to support any team's patterns:
-
-```typescript
-// Logging middleware
-const loggingMiddleware = (state, next, action) => {
-  console.log(`Action: ${action.name}`, state);
-  next(state);
-};
-
-// Validation middleware
-const validationMiddleware = (state, next, action) => {
-  if (state.score >= 0 && state.lives >= 0) {
-    next(state);
-  } else {
-    console.error('Invalid game state!');
-  }
-};
-
-const gameStore = new TachyoManager(initialState, {
-  middleware: [loggingMiddleware, validationMiddleware],
-});
-
-// Or add dynamically
-gameStore.use(customMiddleware);
-```
-
-## Async actions
-
-Track async operations with full debugging support:
-
-```typescript
-editorStore.registerAsyncAction({
-  name: 'loadDocument',
-  handler: async (state, documentId) => {
-    const response = await fetch(`/api/documents/${documentId}`);
-    return response.json();
-  },
-  onStart: (state) => ({ ...state, loading: true }),
-  onSuccess: (state, result) => ({
-    ...state,
-    content: result.content,
-    loading: false,
-  }),
-  onError: (state, error) => ({
-    ...state,
-    error: error.message,
-    loading: false,
-  }),
-});
-
-// Execute with tracking
-await editorStore.dispatchAsync('loadDocument', 'doc-123');
-
-// Get tracking info
-const active = editorStore.getActiveAsyncActions();
-const completed = editorStore.getCompletedAsyncActions();
 ```
 
 ## Options
@@ -435,7 +344,7 @@ const store = new TachyoManager(initialState, {
 });
 ```
 
-## Comparison with other libraries
+## Comparison with Other Libraries
 
 | Feature | tachyo | Zustand | Zundo | Redux |
 |---------|-------|---------|-------|-------|
@@ -448,7 +357,7 @@ const store = new TachyoManager(initialState, {
 | **Type Safety** | ✅ | ✅ | ✅ | ✅ |
 | **Zero Dependencies** | ✅ | ✅ | ✅ | ❌ |
 | **Framework Agnostic** | ✅ | ✅ | ❌ | ✅ |
-| **Bundle Size** | ✅ (~5-8KB) | ✅ (~1KB) | ✅ (~700B) | ❌ (~15KB+) |
+| **Bundle Size** | ✅ (~7KB) | ✅ (~1KB) | ✅ (~700B) | ❌ (~15KB+) |
 
 *Zundo requires Zustand (separate library)  
 **Redux requires Redux Undo (separate library)
@@ -464,7 +373,6 @@ const store = new TachyoManager(initialState, {
 - **Complex state flows** - Need to track what changed
 - **Async-heavy apps** - Need to debug API calls
 - **Multi-framework projects** - Same API everywhere
-- **Debugging-focused teams** - Change tracking saves hours
 
 ### ⚠️ Consider Alternatives If:
 
@@ -472,7 +380,7 @@ const store = new TachyoManager(initialState, {
 - **Already using Redux** - Migration might not be worth it
 - **Simple state only** - If you don't need undo/redo or debugging
 
-## Best practices
+## Best Practices
 
 - **Organize your stores**: Split stores into separate slices for better maintenance
 - **Use TypeScript**: Full type safety out of the box

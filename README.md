@@ -351,13 +351,13 @@ const store = new TachyoManager(initialState, {
 | **Automatic Undo/Redo** | ✅ Core | ❌ | ✅* | ❌** |
 | **Change Path Tracking** | ✅ | ❌ | ❌ | ❌ |
 | **Async Action Tracking** | ✅ | ❌ | ❌ | ❌ |
-| **Redux DevTools** | ✅ | ⚠️ | ⚠️ | ✅ |
+| **Redux DevTools** | ✅ Auto | ✅ (manual setup) | ⚠️ | ✅ |
 | **Performance (ops/sec)**| **~8.5M** | ~7.5M | N/A | ~8.0M |
 | **Simple API** | ✅ | ✅ | ✅ | ❌ |
 | **Type Safety** | ✅ | ✅ | ✅ | ✅ |
 | **Zero Dependencies** | ✅ | ✅ | ✅ | ❌ |
-| **Framework Agnostic** | ✅ | ✅ | ❌ | ✅ |
-| **Bundle Size** | ✅ (~7KB) | ✅ (~1KB) | ✅ (~700B) | ❌ (~15KB+) |
+| **Framework Agnostic** | ✅ | ✅ | ⚠️ (requires Zustand) | ✅ |
+| **Bundle Size** | ✅ (~7KB gzip) | ✅ (~3KB gzip) | ✅ (~700B) | ❌ (~13KB+ gzip) |
 
 *Zundo requires Zustand (separate library)  
 **Redux requires Redux Undo (separate library)
